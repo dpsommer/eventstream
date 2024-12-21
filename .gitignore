@@ -1,0 +1,9 @@
+# ide
+.vscode/
+
+# build files
+dist/
+build/
+
+# local
+scratchpad.md
