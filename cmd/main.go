@@ -2,30 +2,31 @@ package main
 
 import (
 	"context"
+	"time"
 
 	"github.com/dpsommer/eventstream/internal/events"
-	"github.com/dpsommer/eventstream/internal/logging"
 	"github.com/dpsommer/eventstream/internal/regions"
 )
 
 func main() {
-	logger := logging.NewLogger("main: ")
-
 	// create a channel to wait on SIGINT/SIGTERM
 	signals := setupSignals()
 
 	errs := make(chan error)
 	defer close(errs)
 
-	// XXX: AddListener creates background workers
-	// this side effect is convenient, but might be better
-	// broken out into separate functions e.g. if we need
-	// references to the listeners
-	logger.Printf("starting %d event listeners\n", events.MaxWorkers)
-
+	// initialize global context
+	// TODO: change this to a config struct
 	_, ctx := regions.WithContext(context.Background())
-	_, ctx = logging.WithContext(ctx, "event worker: ")
+	sched, ctx := events.WithContext(ctx)
 	populateMap(ctx)
+
+	// start the world clock
+	go events.StartWorldClock(ctx, &events.WorldClockOptions{
+		Tick:      100 * time.Millisecond,
+		Shutdown:  signals,
+		Scheduler: sched,
+	})
 
 	// start the event loop
 	go eventLoop(ctx)

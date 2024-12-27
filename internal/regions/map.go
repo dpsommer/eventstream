@@ -10,10 +10,10 @@ import (
 type Node struct {
 	Value Location
 	// declare priority to implement Prioritizable for the pqueue
-	priority int
+	priority int64
 }
 
-func (n Node) Priority() int { return n.priority }
+func (n Node) Priority() int64 { return n.priority }
 
 type Map struct {
 	nodes map[Location]*Node
@@ -121,7 +121,7 @@ func (m *Map) aStar(from, to Location) ([]*Node, int, bool) {
 				costs[nextNode] = nextCost
 				// TODO: should the map be grid-based so we can use a simple
 				// straight-line heuristic here?
-				nextNode.priority = nextCost // + heuristic(next, to)
+				nextNode.priority = int64(nextCost) // + heuristic(next, to)
 				m.safeHeap.Push(frontier, nextNode)
 				paths[nextNode] = current
 			}

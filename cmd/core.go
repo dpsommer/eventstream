@@ -5,6 +5,7 @@ import (
 
 	"github.com/dpsommer/eventstream/internal/characters"
 	"github.com/dpsommer/eventstream/internal/events"
+	"github.com/dpsommer/eventstream/internal/logging"
 	"github.com/dpsommer/eventstream/internal/regions"
 )
 
@@ -25,7 +26,9 @@ func populateMap(ctx context.Context) *regions.Map {
 }
 
 func eventLoop(ctx context.Context) {
-	// TODO: kick off the event loop workers
+	// TODO: kick off the event loop workers. how should this be defined?
+	_, ctx = logging.WithContext(ctx, "event worker: ")
+
 	character := characters.NewCharacter(ctx, "Duncan")
 
 	for range 10 {

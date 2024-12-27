@@ -7,7 +7,7 @@ package utils
 // refactored using generics to avoid tight coupling with graph impl
 
 type Prioritizable interface {
-	Priority() int
+	Priority() int64
 }
 
 // A PriorityQueue implements heap.Interface and holds Prioritizable types
