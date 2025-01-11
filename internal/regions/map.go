@@ -33,27 +33,23 @@ func NewMap() *Map {
 	}
 }
 
-func (m *Map) AddNode(s Location) {
+func (m *Map) AddNode(loc Location) {
 	m.Lock()
 	defer m.Unlock()
 
-	m.nodes[s] = &Node{
-		Value: s,
+	m.nodes[loc] = &Node{
+		Value: loc,
 	}
+
+	m.edges[loc] = map[Location]int{}
 }
 
 func (m *Map) AddEdge(from, to Location, distance int) error {
 	m.Lock()
 	defer m.Unlock()
 
-	for _, n := range []Location{from, to} {
-		if _, ok := m.nodes[n]; !ok {
-			return fmt.Errorf("no node %s in graph", n)
-		}
-
-		if _, ok := m.edges[n]; !ok {
-			m.edges[n] = map[Location]int{}
-		}
+	if err := m.hasNode(from, to); err != nil {
+		return fmt.Errorf("failed to add edge: %w", err)
 	}
 
 	// XXX: assume all edges are bidirectional
@@ -63,14 +59,26 @@ func (m *Map) AddEdge(from, to Location, distance int) error {
 	return nil
 }
 
+func (m *Map) hasNode(nodes ...Location) error {
+	for _, loc := range nodes {
+		if _, ok := m.nodes[loc]; !ok {
+			return fmt.Errorf("no node %s in graph", loc)
+		}
+	}
+
+	return nil
+}
+
 func (m *Map) Distance(from, to Location) ([]*Node, int, error) {
 	m.Lock()
 	defer m.Unlock()
 
-	for _, n := range []Location{from, to} {
-		if _, ok := m.nodes[n]; !ok {
-			return nil, -1, fmt.Errorf("no node %s in graph", n)
-		}
+	if err := m.hasNode(from, to); err != nil {
+		return nil, -1, fmt.Errorf("failed to find path from %s to %s: %w", from, to, err)
+	}
+
+	if d, ok := m.edges[from][to]; ok {
+		return []*Node{m.nodes[to], m.nodes[from]}, d, nil
 	}
 
 	if from == to {
