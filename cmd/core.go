@@ -4,17 +4,15 @@ import (
 	"context"
 
 	"github.com/dpsommer/eventstream/internal/characters"
-	"github.com/dpsommer/eventstream/internal/events"
-	"github.com/dpsommer/eventstream/internal/logging"
 	"github.com/dpsommer/eventstream/internal/regions"
 )
 
 // TODO: define a proper config for the region map
 // and load it in a nicer way
-func populateMap(ctx context.Context) *regions.Map {
+func populateMap(ctx context.Context) context.Context {
 	m, ok := regions.FromContext(ctx)
 	if !ok {
-		m = regions.NewMap()
+		m, ctx = regions.WithContext(ctx)
 	}
 
 	m.AddNode(regions.Town)
@@ -22,19 +20,18 @@ func populateMap(ctx context.Context) *regions.Map {
 
 	m.AddEdge(regions.Town, regions.Forest, 3)
 
-	return m
+	return ctx
 }
 
-func eventLoop(ctx context.Context) {
-	// TODO: kick off the event loop workers. how should this be defined?
-	_, ctx = logging.WithContext(ctx, "event worker: ")
-
-	character := characters.NewCharacter(ctx, "Duncan")
+func generateCharacters(ctx context.Context) context.Context {
+	o, ok := characters.FromContext(ctx)
+	if !ok {
+		o, ctx = characters.WithContext(ctx)
+	}
 
 	for range 10 {
-		events.Emit(ctx, &events.MovementEvent{
-			Character:   character,
-			Destination: regions.Forest,
-		})
+		o.AddCharacter(regions.Town)
 	}
+
+	return ctx
 }

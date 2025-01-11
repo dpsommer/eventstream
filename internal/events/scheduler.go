@@ -30,10 +30,10 @@ func NewScheduler(ctx context.Context) *Scheduler {
 	}
 }
 
-func (s *Scheduler) processScheduledEvents() {
+func (s *Scheduler) ProcessScheduledEvents() {
 	for {
 		if s.scheduledEvents.Len() < 1 {
-			continue
+			break
 		}
 
 		se := heap.Pop(s.scheduledEvents).(*ScheduledEvent)
@@ -54,7 +54,7 @@ func (s *Scheduler) processScheduledEvents() {
 func (s *Scheduler) Schedule(e Event) {
 	logger, ok := logging.FromContext(s.ctx)
 	if !ok {
-		logger, s.ctx = logging.WithContext(s.ctx, "scheduler: ")
+		logger = logging.NewLogger("scheduler: ")
 	}
 
 	duration, err := e.Duration(s.ctx)
