@@ -5,6 +5,7 @@ import (
 	"runtime"
 
 	"github.com/dpsommer/eventstream/internal/logging"
+	"github.com/dpsommer/eventstream/internal/utils"
 	"golang.org/x/sync/semaphore"
 )
 
@@ -16,12 +17,12 @@ var (
 func Emit(ctx context.Context, event Event) error {
 	logger, ok := logging.FromContext(ctx)
 	if !ok {
-		logger, ctx = logging.WithContext(ctx, "event worker: ")
+		logger = logging.NewLogger("event bus: ")
 	}
 
 	sched, ok := FromContext(ctx)
 	if !ok {
-		sched = NewScheduler(ctx)
+		return utils.ErrSchedulerContext
 	}
 
 	// acquire blocks until a worker is free - if we get an error here,
@@ -33,11 +34,6 @@ func Emit(ctx context.Context, event Event) error {
 
 	go func(e Event) {
 		defer sem.Release(1)
-		// FIXME: locking here means that the event pool can get completely
-		// blocked if objects have multiple blocking events fire. where is the
-		// correct place to handle this synchronous behaviour? is there a
-		// better approach than just slapping mutexes on each actor?
-		e.PreProcess(ctx)
 		sched.Schedule(e)
 	}(event)
 
